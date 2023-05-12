@@ -1,0 +1,761 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/JoseMilad/PruebaIo1Grupo01/blob/main/prueba\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Informe final IO I 2023-01\n",
+        "\n",
+        "Diligencia las casillas indicadas.\n",
+        "\n",
+        "**No modifique la estructura del archivo.**\n",
+        "\n",
+        "Plantee y resuelva el problema utilizando [CVXPY](https://www.cvxpy.org/).\n",
+        "\n",
+        "El código debe ser legible e incluir comentarios. Se recomienda utilizar la guía [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)."
+      ],
+      "metadata": {
+        "id": "xEXkvK0O0LJe"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Integrantes del equipo que participaron en la elaboración del informe\n",
+        "\n",
+        "Escriba, a continuación, los nombres y los apellidos de las personas que hayan **participado de manera significativa** en la elaboración del informe.\n",
+        "\n",
+        "1. Catalina Roldán Osorio   \n",
+        "2. Jesús Miguel Porto López   \n",
+        "3. José Milad Sánchez Jalal\n",
+        "4. Felipe Escobar Londoño"
+      ],
+      "metadata": {
+        "id": "wnCTxb6i0e6N"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Objetivo del proyecto\n",
+        "\n",
+        "¿Qué van a minimizar o qué van a maximizar y en qué unidades se mide?"
+      ],
+      "metadata": {
+        "id": "9fLgajWc2IYU"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Lograr minimizar los costos de la instalación de redes de gas natural en la Unidad Jorge Robledo, ubicada en la ciudad de Medellín, por medio de la aplicación de modelos PL, con base en el sistema colombiano. Para esto se buscará la ruta más corta en metros, teniendo diez (10) nodos ubicados estratégicamente en la unidad residencial, con el fin de cubrir la demanda al menor costo.\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "QlB9YC282ngL"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#Importante\n",
+        "\n",
+        "**Coeficientes de costos:**\n",
+        "https://docs.google.com/spreadsheets/d/1Uy1UFVkaBQG_Ma_y8ecFoHLBjkPfAU9NofpHn6EofoA/edit?usp=share_link\n",
+        "\n",
+        "**Coeficientes técnicos:**\n",
+        "https://docs.google.com/spreadsheets/d/1NEZScdAkuhcIQa7pa_rHNEqYEFA9-yoOJfm6skGKpvg/edit?usp=share_link\n",
+        "\n",
+        "**Restricciones:**\n",
+        "https://docs.google.com/spreadsheets/d/19E2eJhusVTYOK47hBiEaJLWqw09tYwPzaSYmR5vOCDo/edit?usp=share_link\n"
+      ],
+      "metadata": {
+        "id": "Qa8SyhOR6sMB"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Preparación del ejercicio"
+      ],
+      "metadata": {
+        "id": "nHnpwNeq7ebB"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para importar las librerías requeridas\n",
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import cvxpy as cvx\n",
+        "from cvxopt import solvers"
+      ],
+      "metadata": {
+        "id": "8obDvj_b78eQ"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Variables de decisión\n",
+        "¿Cuáles son las variables de decisión y cuáles son sus unidades de medida?"
+      ],
+      "metadata": {
+        "id": "QGy27SoU2uW0"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Todas las variables están en metros\n",
+        "\n",
+        "1. N01\n",
+        "2. N02\n",
+        "3. N06\n",
+        "4. N09\n",
+        "5. N12\n",
+        "6. N13\n",
+        "7. N14\n",
+        "8. N16\n",
+        "9. N19\n",
+        "10. N21\n",
+        "11. N23\n",
+        "12. N24\n",
+        "13. N25\n",
+        "14. N26\n",
+        "15. N29\n",
+        "16. N31\n",
+        "17. N32\n",
+        "18. N34\n",
+        "19. N35\n",
+        "20. N36\n",
+        "21. N38\n",
+        "22. N39\n",
+        "23. N41\n",
+        "24. N42\n",
+        "25. N43\n",
+        "26. N46\n",
+        "27. N49\n",
+        "28. N52\n",
+        "29. N53\n",
+        "30. N57\n",
+        "31. N58\n",
+        "32. N59\n",
+        "33. N61\n",
+        "34. N62\n",
+        "35. N63\n",
+        "36. N64\n",
+        "37. N69\n",
+        "38. N78\n",
+        "39. N79\n",
+        "40. N83\n",
+        "41. N85\n",
+        "42. N87\n",
+        "43. N89\n",
+        "44. N91\n",
+        "45. N92\n",
+        "46. N93\n",
+        "47. N94\n",
+        "48. N95\n",
+        "49. N96\n",
+        "50. N97\n",
+        "51. N98\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "6rsg46CV3ZGk"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para crear las variables de decisión\n",
+        "# Creamos un arreglo 10x10..............\n",
+        "x = cvx.Variable((10,10), boolean =True)"
+      ],
+      "metadata": {
+        "id": "lhlFKyIP8lBI"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Coeficientes de costos\n",
+        "\n",
+        "¿Cuáles son los coeficientes de costos y cuáles sus unidades de medida?"
+      ],
+      "metadata": {
+        "id": "nfkjPzO11-mQ"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Escriba acá los coeficientes de costos con sus correspondientes unidades de medida\n"
+      ],
+      "metadata": {
+        "id": "bYxmrgvxG8Qb"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para cargar los coeficientes de costos\n",
+        "\n",
+        "# Guardar en la variable 'ruta' la url del conjunto de datos \n",
+        "# con los coeficientes de costos \n",
+        "ruta = \"https://docs.google.com/spreadsheets/d/e/\" \\\n",
+        "        \"2PACX-1vTsDK7r4JkzI7u9Fhp1Vs6DpvFgTMyIsGWqLXmc3UvNnt0\"\\\n",
+        "        \"GA7ktrwR1oHwJkzTo_6FE1cemeNr0oTl-/pub?gid=0&single=true&output=csv\"\n",
+        "\n",
+        "# Cargar el conjunto de datos a partir de la ruta establecida\n",
+        "data_costos = pd.read_csv(ruta, sep=\",\")\n",
+        "coe_costos = np.array(data_costos)\n",
+        "\n",
+        "# Verificar la lectura del conjunto de datos\n",
+        "print (\"Los tipos de datos contenidos en las columnas de coe_costos son:\\n\",\n",
+        "       data_costos.dtypes, \"\\n\")\n",
+        "print (\"Los índices de las filas de coe_costos son:\\n\",\n",
+        "       data_costos.index, \"\\n\")\n",
+        "print (\"Los índices de las columnas de coe_costos son:\\n\",\n",
+        "       data_costos.columns, \"\\n\")\n",
+        "print (\"Los estadísticos de las variables numéricas de coe_costos son:\\n\",\n",
+        "       data_costos.describe(), \"\\n\")\n",
+        "print(coe_costos)"
+      ],
+      "metadata": {
+        "id": "RGx6Z7Fw32fW",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "af303781-d9fd-4fcd-96f9-7c1b507316cb"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Los tipos de datos contenidos en las columnas de coe_costos son:\n",
+            " 0      int64\n",
+            "1    float64\n",
+            "2    float64\n",
+            "3    float64\n",
+            "4    float64\n",
+            "5    float64\n",
+            "6    float64\n",
+            "7    float64\n",
+            "8    float64\n",
+            "9    float64\n",
+            "dtype: object \n",
+            "\n",
+            "Los índices de las filas de coe_costos son:\n",
+            " RangeIndex(start=0, stop=10, step=1) \n",
+            "\n",
+            "Los índices de las columnas de coe_costos son:\n",
+            " Index(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], dtype='object') \n",
+            "\n",
+            "Los estadísticos de las variables numéricas de coe_costos son:\n",
+            "              0             1             2             3             4  \\\n",
+            "count     10.0     10.000000     10.000000     10.000000     10.000000   \n",
+            "mean   10000.0   4037.244000   3058.598000   3051.632000   5038.765000   \n",
+            "std        0.0   5131.961233   4790.072046   4794.850007   5229.618442   \n",
+            "min    10000.0     34.480000     47.020000     47.020000     52.460000   \n",
+            "25%    10000.0     57.372500     79.295000     71.655000     78.005000   \n",
+            "50%    10000.0     89.150000    103.630000     88.115000   5053.215000   \n",
+            "75%    10000.0  10000.000000   7529.280000   7523.150000  10000.000000   \n",
+            "max    10000.0  10000.000000  10000.000000  10000.000000  10000.000000   \n",
+            "\n",
+            "                  5             6             7             8             9  \n",
+            "count     10.000000     10.000000     10.000000     10.000000     10.000000  \n",
+            "mean    5039.635000   4040.937000   7016.752000   6023.231000   1070.940000  \n",
+            "std     5228.709462   5128.787346   4803.503784   5134.018313   3137.497268  \n",
+            "min       49.240000     35.410000     26.670000     26.670000     37.310000  \n",
+            "25%       77.430000     60.432500   2561.897500     79.947500     57.412500  \n",
+            "50%     5058.560000     96.805000  10000.000000  10000.000000     84.005000  \n",
+            "75%    10000.000000  10000.000000  10000.000000  10000.000000    103.575000  \n",
+            "max    10000.000000  10000.000000  10000.000000  10000.000000  10000.000000   \n",
+            "\n",
+            "[[10000.      34.48    77.61 10000.   10000.   10000.      43.54 10000.\n",
+            "  10000.     132.59]\n",
+            " [10000.   10000.      52.62    71.63    75.22 10000.      35.41 10000.\n",
+            "  10000.     103.08]\n",
+            " [10000.      52.62 10000.      47.02   106.43   117.12    84.35 10000.\n",
+            "  10000.     100.83]\n",
+            " [10000.      71.63    47.02 10000.      86.36    71.73    89.87 10000.\n",
+            "     92.6     57.11]\n",
+            " [10000.      75.22   106.43    86.36 10000.   10000.      52.46 10000.\n",
+            "  10000.      67.18]\n",
+            " [10000.   10000.     117.12    71.73 10000.   10000.   10000.      82.53\n",
+            "     75.73    49.24]\n",
+            " [10000.      35.41    84.35    89.87    52.46 10000.   10000.   10000.\n",
+            "  10000.     103.74]\n",
+            " [10000.   10000.   10000.   10000.   10000.      82.53 10000.   10000.\n",
+            "     26.67    58.32]\n",
+            " [10000.   10000.   10000.      92.6  10000.      75.73 10000.      26.67\n",
+            "  10000.      37.31]\n",
+            " [10000.     103.08   100.83    57.11    67.18    49.24   103.74    58.32\n",
+            "     37.31 10000.  ]]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Función objetivo"
+      ],
+      "metadata": {
+        "id": "RotGELTj4AMV"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para crear la función \n",
+        "obj_00=cvx.Minimize(cvx.sum(cvx.multiply(coe_costos,x)))"
+      ],
+      "metadata": {
+        "id": "7YSu06Ws4EK6"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Coeficientes técnicos\n",
+        "\n",
+        "¿Cuáles son los coeficientes técnicos y cuáles son sus unidades de medida?"
+      ],
+      "metadata": {
+        "id": "rRG9t0W-4PD1"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Escriba acá los coeficientes técnicos con sus correspondientes unidades de medida\n"
+      ],
+      "metadata": {
+        "id": "M7TTJG1jHLEs"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para cargar los coeficientes técnicos\n",
+        "\n",
+        "# Guardar en la variable 'ruta_1' la url del conjunto de datos \n",
+        "# con los coeficientes técnicos \n",
+        "ruta_1 = \"https://docs.google.com/spreadsheets/d/e/2PACX-1vQraFxwTI4GQSBI_fDFKrrm0RFcto-gjD12Ft4hXkUO_sfonEFEb_TNN_Mp5jrJsmkBOD4RUjoKOiTS/pub?gid=0&single=true&output=csv\"\n",
+        "\n",
+        "# Cargar el conjunto de datos a partir de la ruta establecida\n",
+        "data_tecnica = pd.read_csv(ruta_1, sep=\",\")\n",
+        "coe_tecnicos = np.array(data_tecnica)\n",
+        "\n",
+        "# Verificar la lectura del conjunto de datos\n",
+        "print (\"Los tipos de datos contenidos en las columnas de data_tecnica son:\\n\",\n",
+        "       data_tecnica.dtypes, \"\\n\")\n",
+        "print (\"Los índices de las filas de data_tecnica son:\\n\",\n",
+        "       data_tecnica.index, \"\\n\")\n",
+        "print (\"Los índices de las columnas de data_tecnica son:\\n\",\n",
+        "       data_tecnica.columns, \"\\n\")\n",
+        "print (\"Los estadísticos de las variables numéricas de data_tecnica son:\\n\",\n",
+        "       data_tecnica.describe(), \"\\n\")\n",
+        "\n",
+        "print(coe_tecnicos)"
+      ],
+      "metadata": {
+        "id": "Zs1HUvPk4Wv4",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "eff6d792-881e-4546-ecd2-e61d3dde708f"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Los tipos de datos contenidos en las columnas de data_tecnica son:\n",
+            " 0    int64\n",
+            "1    int64\n",
+            "2    int64\n",
+            "3    int64\n",
+            "4    int64\n",
+            "5    int64\n",
+            "6    int64\n",
+            "7    int64\n",
+            "8    int64\n",
+            "9    int64\n",
+            "dtype: object \n",
+            "\n",
+            "Los índices de las filas de data_tecnica son:\n",
+            " RangeIndex(start=0, stop=10, step=1) \n",
+            "\n",
+            "Los índices de las columnas de data_tecnica son:\n",
+            " Index(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], dtype='object') \n",
+            "\n",
+            "Los estadísticos de las variables numéricas de data_tecnica son:\n",
+            "           0          1          2          3          4          5          6  \\\n",
+            "count  10.0  10.000000  10.000000  10.000000  10.000000  10.000000  10.000000   \n",
+            "mean    0.0   0.600000   0.700000   0.700000   0.500000   0.500000   0.600000   \n",
+            "std     0.0   0.516398   0.483046   0.483046   0.527046   0.527046   0.516398   \n",
+            "min     0.0   0.000000   0.000000   0.000000   0.000000   0.000000   0.000000   \n",
+            "25%     0.0   0.000000   0.250000   0.250000   0.000000   0.000000   0.000000   \n",
+            "50%     0.0   1.000000   1.000000   1.000000   0.500000   0.500000   1.000000   \n",
+            "75%     0.0   1.000000   1.000000   1.000000   1.000000   1.000000   1.000000   \n",
+            "max     0.0   1.000000   1.000000   1.000000   1.000000   1.000000   1.000000   \n",
+            "\n",
+            "               7          8          9  \n",
+            "count  10.000000  10.000000  10.000000  \n",
+            "mean    0.300000   0.400000   0.900000  \n",
+            "std     0.483046   0.516398   0.316228  \n",
+            "min     0.000000   0.000000   0.000000  \n",
+            "25%     0.000000   0.000000   1.000000  \n",
+            "50%     0.000000   0.000000   1.000000  \n",
+            "75%     0.750000   1.000000   1.000000  \n",
+            "max     1.000000   1.000000   1.000000   \n",
+            "\n",
+            "[[0 1 1 0 0 0 1 0 0 1]\n",
+            " [0 0 1 1 1 0 1 0 0 1]\n",
+            " [0 1 0 1 1 1 1 0 0 1]\n",
+            " [0 1 1 0 1 1 1 0 1 1]\n",
+            " [0 1 1 1 0 0 1 0 0 1]\n",
+            " [0 0 1 1 0 0 0 1 1 1]\n",
+            " [0 1 1 1 1 0 0 0 0 1]\n",
+            " [0 0 0 0 0 1 0 0 1 1]\n",
+            " [0 0 0 1 0 1 0 1 0 1]\n",
+            " [0 1 1 1 1 1 1 1 1 0]]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Restricciones\n",
+        "\n",
+        "¿Cuáles son las restricciones y cuáles son sus unidades de medida?"
+      ],
+      "metadata": {
+        "id": "XlrmY9rM4f2Y"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Todas las restricciones están expresadas en número de trayectos.\n",
+        "\n",
+        "**Nodo Inicial.**\n",
+        "1. N01+ N02 + N06+ N09 >= 1\n",
+        "\n",
+        "**Nodo Final.**\n",
+        "2. N57+ N87 + N97 >= 1\n",
+        "\n",
+        "**Un Nodo sólo puede recibir gas natural una vez.**\n",
+        "3. N01+ N21+ N31+ N41 +N61+N91 = 1\n",
+        "4. N02+ N12 + N32+ N42 + N52 + N62 + N92 = 1\n",
+        "5. N13+ N23 + N43+ N53+ N63 +N83+ N93 = 1\n",
+        "6. N14+ N24 + N34+N64+ N94 = 1\n",
+        "7. N25+ N35 + N75+ N85+ N95 = 1\n",
+        "8. N06+ N16 + N26+N36+ N46 + N96 = 1\n",
+        "9. N57+ N87 + N97 = 1\n",
+        "10. N38+ N58 + N78+ N98 = 1\n",
+        "11. N09+ N19 + N29+ N39+ N49 +N59+ N69 +N79+ N89 = 1\n",
+        "\n",
+        "**Un Nodo puede mandar gas natural a otros nodos o no mandar.**\n",
+        "12. N12+ N13+ N14 +N16+N19 >= 0\n",
+        "13. N21 + N23+ N24 + N25 + N26 + N29 >= 0\n",
+        "14. N31+ N32 + N34+ N35+ N36 +N38+ N39 >= 0\n",
+        "15. N41+ N42 + N43+N46+ N49 >= 0\n",
+        "16. N52+ N53 + N57+ N58+ N59 >= 0\n",
+        "17. N61 + N62+N63+ N64 + N69 >= 0\n",
+        "18. N75+ N78 + N79 = 0\n",
+        "19. N83+ N85 + N87+ N89 >= 0\n",
+        "20. N91 + N92+ N93+ N94 +N95+ N96 +N97+ N98 >= 0\n",
+        "\n",
+        "**Cada conexión entre nodos sólo puede ir en un sentido.**\n",
+        "21. Nij+Nji=1, i != j\n",
+        "\n",
+        "**Una conexión entre nodos pueden o no existir.**\n",
+        "22. Todas las variables Nij= 0,1\n"
+      ],
+      "metadata": {
+        "id": "kecH_marHZgn"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para cargar las restricciones\n",
+        "\n",
+        "# Guardar en la variable 'ruta_2' la url del conjunto de datos \n",
+        "# con las restricciones \n",
+        "#ruta_2 = \n",
+        "\n",
+        "# Cargar el conjunto de datos a partir de la ruta establecida\n",
+        "\n",
+        "\n",
+        "# Verificar la lectura del conjunto de datos\n"
+      ],
+      "metadata": {
+        "id": "Ck_QZVgp4iBm"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para plantear las inecuaciones \n",
+        "# y las ecuaciones de las restricciones.\n",
+        "# Mínimo diez (10) sin incluir las de no negatividad, enteros y binarios.\n",
+        "multi = cvx.multiply(x, coe_costos)\n",
+        "restricciones = [\n",
+        "    # Nodo Inicial.\n",
+        "    cvx.sum(multi[:,1])==1,\n",
+        "    cvx.sum(multi[:,2])==1,\n",
+        "    cvx.sum(multi[:,3])==1,\n",
+        "    cvx.sum(multi[:,4])==1,\n",
+        "    cvx.sum(multi[:,5])==1,\n",
+        "    cvx.sum(multi[:,6])==1,\n",
+        "    cvx.sum(multi[:,7])==1,\n",
+        "    cvx.sum(multi[:,8])==1,\n",
+        "    cvx.sum(multi[:,9])==1,\n",
+        "    # Un Nodo puede mandar gas natural a otros nodos o no mandar.\n",
+        "    cvx.sum(multi[1,:])>=0,\n",
+        "    cvx.sum(multi[2,:])>=0,\n",
+        "    cvx.sum([3,:])>=0,\n",
+        "    cvx.sum(x[4,:])>=0,\n",
+        "    cvx.sum(x[5,:])>=0,\n",
+        "    cvx.sum(x[6,:])>=0,\n",
+        "    cvx.sum(x[7,:])>=0,\n",
+        "    cvx.sum(x[8,:])>=0,\n",
+        "    cvx.sum(x[9,:])>=0,\n",
+        "    # Cada conexión entre nodos sólo puede ir en un sentido.\n",
+        "    \n",
+        "] \n",
+        "\n",
+        "print(restricciones)"
+      ],
+      "metadata": {
+        "id": "ad05OTP34-rq",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "197b711e-3481-4795-c9a6-126a33e70a97"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Equality(Expression(AFFINE, NONNEGATIVE, ()), Constant(CONSTANT, NONNEGATIVE, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ())), Inequality(Constant(CONSTANT, ZERO, ()))]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Estructuración del problema"
+      ],
+      "metadata": {
+        "id": "mapOEaHp4spo"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para estructurar el problema\n",
+        "prob_00 = cvx.Problem(obj_00, restricciones)"
+      ],
+      "metadata": {
+        "id": "_PP37Uwk4zEH"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Solución del problema"
+      ],
+      "metadata": {
+        "id": "oZ-WyfnK5b0q"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para solucionar el problema \n",
+        "#y mostrar el estado de la solución\n",
+        "prob_00.solve()\n",
+        "# Mostrar el estado de la solución y el valor óptimo de la función objetivo\n",
+        "print(\"Estado de la solución:\", prob_00.status,\"\\n\" \n",
+        "      + \"El costo total de las tareas será:\", \"%.2f\"% prob_00.value, \"\\n\")\n",
+        "\n",
+        "for i in range(10):\n",
+        "  for j in range(10):\n",
+        "    if x.value[i][j] == 1.0:\n",
+        "      print(f\"N{i}{j}: {coe_costos[i][j]}\")"
+      ],
+      "metadata": {
+        "id": "XcEAnYeN5ghW",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "4c42dde2-bab7-42c2-ccfe-8aa04cc63290"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Estado de la solución: optimal \n",
+            "El costo total de las tareas será: 356.28 \n",
+            "\n",
+            "N01: 34.48\n",
+            "N16: 35.41\n",
+            "N23: 47.02\n",
+            "N32: 47.02\n",
+            "N64: 52.46\n",
+            "N78: 26.67\n",
+            "N87: 26.67\n",
+            "N89: 37.31\n",
+            "N95: 49.24\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Resultados\n",
+        "\n",
+        "Muestre el valor óptimo de la función objetivo y los valores óptimos de las variables de decisión, junto con sus unidades."
+      ],
+      "metadata": {
+        "id": "DVM2YTa85uAL"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Escriba acá el código para mostrar los resultados\n"
+      ],
+      "metadata": {
+        "id": "QMHUuOex5w-T"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Análisis de los resultados"
+      ],
+      "metadata": {
+        "id": "wRsqygCu52yA"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Escriba acá el análisis de los resultados obtenidos (máximo 50 palabras)\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "3MOWkWhO57Q4"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Fuentes de datos"
+      ],
+      "metadata": {
+        "id": "ZniPABWy6Fn6"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "*   Decreto xxxxxx Diciembre xxxx de 2017 Por medio del cual se establecen los precios para la construcción y/o modificación de las redes de gas natural: https://www.epm.com.co/site/portals/0/documentos/decreto-redes-internas.pdf\n",
+        "\n",
+        "*   Mapa de las redes de Gas natural en medellín: https://grupoepm.maps.arcgis.com/apps/webappviewer/index.html?id=215d4772dd0e45a4b34da96c5bb7d7b8\n",
+        "\n",
+        "*   Instalación de gas en las viviendas: https://www.areatecnologia.com/Instalacion-gas.htm#:~:text=Para%20que%20una%20instalaci%C3%B3n%20de,presi%C3%B3n%20m%C3%A1xima%20de%204%20bares\n",
+        "\n",
+        "*   Generador de precios: http://www.colombia.generadordeprecios.info/obra_nueva/calculaprecio.asp?Valor=1_0_1%7C1%7C0%7CADE010%7Cade_010:_0_0_0_1_2_0_0_0_0_1_0_0_0_0_1%7Cade_010_sys:_0\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "S5DNUTto6IUw"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "prueba = cvx.Parameter((2,2))\n",
+        "prueba.value = [[1,2],[3,4]]\n",
+        "prueba1 = cvx.Parameter((2,2))\n",
+        "prueba1.value = [[5,6],[7,8]]\n",
+        "resu = cvx.multiply(prueba,prueba1)\n",
+        "print(resu.value)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ET5LK1kmOGKh",
+        "outputId": "83f16e68-0313-4f44-8bca-271a28fbbaf8"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[[ 5. 21.]\n",
+            " [12. 32.]]\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
